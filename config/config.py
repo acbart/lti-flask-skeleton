@@ -12,6 +12,8 @@ except IOError:
     raise SystemError()
 
 class Config(object):
+    # TODO: it is up to you to decide when to increment version numbers
+    VERSION = '0.1.0'
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True

@@ -14,8 +14,19 @@ Getting Started
   #. Download and run this
   #. If you're on windows, you'll need to install the certificate
   #. Either way, ensure that there is a PEM file in your `certs/` directory and that it is correctly referenced in your `secrets.yaml`.
+  
+Moving to Production
+====================
+  
+#. Change the `main.py` file's configuration load from `TestConfig` to `ProductionConfig`.
+#. Set up a production database on the server, making sure there is a reference to it in the `config/config.py` file.
 
 Running Your Site
 =================
 
 #. If you're using Chrome, you may need to click through a "Untrusted Certificate" error. This may look scary, but obviously you can trust your own site.
+
+PEM Files?
+==========
+
+LTI Authentication uses the OAuth standard, which is a secure protocol over HTTPS for communication between computers. It's a giant pain, but a necessary part of doing modern web business. LTI requires a certificate for your server to do business. You'll need to have your production server's certificate signed by a trusted entity (some universities will have a service for this), which means shelling out some money annually. Fortunately, your local development instance can have a self-signed certificate, which will only cause a very minor nuisance when you start work everyday (you have to tell Chrome not to worry about the fact that it's self-signed).

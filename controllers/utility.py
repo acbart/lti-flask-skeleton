@@ -1,3 +1,12 @@
+import os
+
+# Flask tools
+from flask import send_from_directory, url_for
+
+# Application specific
+from main import app
+from models.models import db, User, Role
+
 @app.route('/favicon.ico', methods=['GET', 'POST'])
 def favicon():
     '''

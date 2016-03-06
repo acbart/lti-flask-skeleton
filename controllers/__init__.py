@@ -1,11 +1,10 @@
 import os
 
-from main import app
-
-from models.models import db, User, Role
-from flask import session, g, send_from_directory, request, jsonify, render_template
-from flask import redirect, url_for
+# Flask tools
 from flask_security.core import current_user
+
+# Application specific
+from main import app
 
 @app.before_request
 def load_user():

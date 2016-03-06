@@ -26,6 +26,10 @@ Running Your Site
 
 #. If you're using Chrome, you may need to click through a "Untrusted Certificate" error. This may look scary, but obviously you can trust your own site.
 
+#. Run the secure server by using `manage.py` with the `secure` command:
+
+    > python manage.py secure
+
 PEM Files?
 ==========
 

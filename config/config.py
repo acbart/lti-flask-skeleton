@@ -29,6 +29,11 @@ class Config(object):
     # secret key for flask authentication
     SECRET_KEY = secrets['FLASK_SECRET_KEY']
     
+    # Configure server oauth settings
+    SERVER_CERTIFICATE_FILE = secrets['SERVER_CERTIFICATE_FILE']
+    SERVER_KEY_FILE = secrets['SERVER_KEY_FILE']
+    
+    # Configure PyLTI oauth settings
     PYLTI_CONFIG = {
         "consumers": {
             secrets["CONSUMER_KEY"]: {

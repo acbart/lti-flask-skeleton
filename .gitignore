@@ -1,5 +1,6 @@
 # Be careful not to commit your secrets file!
 config/secrets.yaml
+database/test.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

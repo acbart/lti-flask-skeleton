@@ -26,13 +26,15 @@ Moving to Production
 Running Your Site
 =================
 
-#. If you're using Chrome, you may need to click through a "Untrusted Certificate" error. This may look scary, but obviously you can trust your own site.
-
 #. Run the secure server by using `manage.py` with the `secure` command:
 
     > python manage.py secure
+    
+#. If everything goes well, you should be told that your server is running, and that you can access it a specific URL (e.g., "https://localhost:5000").
+
+#. If you're using Chrome, you may need to click through a "Untrusted Certificate" error. This may look scary, but obviously you can trust your own site.
 
 PEM Files?
 ==========
 
-LTI Authentication uses the OAuth standard, which is a secure protocol over HTTPS for communication between computers. It's a giant pain, but a necessary part of doing modern web business. LTI requires a certificate for your server to do business. You'll need to have your production server's certificate signed by a trusted entity (some universities will have a service for this), which means shelling out some money annually. Fortunately, your local development instance can have a self-signed certificate, which will only cause a very minor nuisance when you start work everyday (you have to tell Chrome not to worry about the fact that it's self-signed).
+LTI Authentication uses the OAuth standard, which is a secure protocol over HTTPS for communication between computers. It's a giant pain, but a necessary part of doing modern web business. LTI requires a certificate for your server, showing to visitors that someone else has endorsed you. You'll need to have your production server's certificate signed by a trusted entity (some universities will have a service for this), which means shelling out some money annually. Fortunately, your local development instance can have a self-signed certificate, which will only cause a very minor nuisance when you start every other work session (you have to tell Chrome not to worry about the fact that it's self-signed).

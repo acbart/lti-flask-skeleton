@@ -1,3 +1,9 @@
+'''
+Your admin controller should hold routes that let administrators do their job.
+For instance, I create views into the database using FlaskAdmin, and also
+have a route for remotely shutting down my server.
+'''
+
 # Import Flask
 from flask import g, request, url_for
 from flask.ext.admin import Admin
@@ -13,26 +19,34 @@ from models.models import (User, db, Course, Submission, Assignment,
 
 admin = Admin(app)
 
-class RegularView(ModelView):
+class RequireAdminView(ModelView):
+    '''
+    A simple View that demands the the user be an admin.
+    '''
     def is_accessible(self):
         if g.user:
             return g.user.is_admin()
         return False
         
-class UserView(RegularView):
-    def _list_roles(view, context, model, name):
-        return 'some roles'
+class UserView(RequireAdminView):
+    '''
+    An override of the basic view for users, hiding their password and displaying
+    an image for them.
+    '''
     def _list_thumbnail(view, context, model, name):
         if model.picture.startswith('http'):
             return Markup('<img style="width:50px" src="{}">'.format(model.picture))
         else:
-            return Markup('<img src="{}">'.format(url_for('static', filename='anon.jpg')))
-    column_formatters = { 'picture': _list_thumbnail, 'roles': _list_roles }
+            return Markup('<img src="{}">'.format(url_for('static', filename='images/anon.jpg')))
+    column_formatters = { 'picture': _list_thumbnail}
     form_excluded_columns = ('password',)
     column_exclude_list = ('password',)
     column_display_pk = True
 
-class ModelIdView(RegularView):
+class ModelIdView(RequireAdminView):
+    '''
+    A simple adjustment of the basic view to show the primary key.
+    '''
     column_display_pk = True
     
 def _editable(table, field):
@@ -45,7 +59,7 @@ def _id(table):
         return table.query.filter(table.id == getattr(model, name)).first()
     return _edit_id
     
-class RoleView(RegularView):
+class RoleView(RequireAdminView):
     column_list = ('id', 'date_created', 'name', 'user_id', 'course_id')
     column_labels = {'id': 'Role ID', 'date_created': 'Created',
                      'name': 'Name', 'user_id': "User", "course_id": "Course"}
@@ -54,7 +68,7 @@ class RoleView(RegularView):
     column_formatters = { 'user_id': _id(User),
                           'course_id': _id(Course)}
     form_columns = ('name', 'user_id', 'course_id')
-class AssignmentView(RegularView):
+class AssignmentView(RequireAdminView):
     column_list = ('id', 'date_modified', 
                    'owner_id', 'course_id',
                    'name', 'body', 
@@ -62,12 +76,12 @@ class AssignmentView(RegularView):
                    'type', 'visibility', 'disabled', 'mode',
                    'version'
                    )
-class AssignmentGroupView(RegularView):
+class AssignmentGroupView(RequireAdminView):
     column_list = ('id', 'date_modified', 
                    'owner_id', 'course_id',
                    'name'
                    )
-class AssignmentGroupMembershipView(RegularView):
+class AssignmentGroupMembershipView(RequireAdminView):
     column_list = ('id', 'date_modified', 
                    'assignment_group_id', 'assignment_id',
                    'position'
@@ -75,13 +89,16 @@ class AssignmentGroupMembershipView(RegularView):
     form_columns = ('assignment_group_id', 'assignment_id', 'position')
     column_formatters = { 'user_id': _editable(User, 'id'),
                           'course_id': _editable(Course, 'id')}
-class SubmissionView(RegularView):
+class SubmissionView(RequireAdminView):
     column_list = ('id', 'date_modified', 
                    'user_id', 'assignment_id',
                    'code', 'status', 
                    'correct', 'version', 'assignment_version'
                    )
                    
+'''
+Register the actual views themselves..
+'''
 admin.add_view(UserView(User, db.session, category='Tables'))
 admin.add_view(ModelIdView(Course, db.session, category='Tables'))
 admin.add_view(SubmissionView(Submission, db.session, category='Tables'))

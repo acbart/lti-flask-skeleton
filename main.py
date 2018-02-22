@@ -16,6 +16,7 @@ from flask import Flask
 app = Flask(__name__)
 
 # Log any information from the application to the console
+# You might consider modifying this (e.g., log to a file instead)
 LOGGING_LEVEL = logging.INFO
 root = logging.getLogger('SystemLogger')
 root.setLevel(LOGGING_LEVEL)

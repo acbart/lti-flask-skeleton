@@ -28,17 +28,10 @@ root.addHandler(channel)
 
 # Load in your application configuration
 # TODO: switch to config.ProductionConfig for the production server
-app.config.from_object('config.TestingConfig')
+app.config.from_object('config.config.TestingConfig')
 
 # Assign the VERSION to this application.
 VERSION = app.config['VERSION']
-
-# Assets
-from controllers.assets import assets
-
-# Email
-from flask.ext.mail import Mail
-mail = Mail(app)
 
 # Your controllers
 import controllers

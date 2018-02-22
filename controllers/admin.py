@@ -6,8 +6,8 @@ have a route for remotely shutting down my server.
 
 # Import Flask
 from flask import g, request, url_for
-from flask.ext.admin import Admin
-from flask.ext.admin.contrib.sqla import ModelView
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 from jinja2 import Markup
 
 # Import runestone
@@ -15,7 +15,7 @@ from main import app
 from controllers.helpers import admin_required
 from models.models import (User, db, Course, Submission, Assignment, 
                            AssignmentGroup, AssignmentGroupMembership, Settings,
-                           Authentication, Log, Role)
+                           Authentication, Role)
 
 admin = Admin(app)
 
@@ -108,7 +108,6 @@ admin.add_view(AssignmentGroupMembershipView(AssignmentGroupMembership, db.sessi
 admin.add_view(ModelIdView(Settings, db.session, category='Tables'))
 admin.add_view(ModelIdView(Authentication, db.session, category='Tables'))
 admin.add_view(RoleView(Role, db.session, category='Tables'))
-admin.add_view(ModelIdView(Log, db.session, category='Tables'))
 
 @app.route('/admin/shutdown', methods=['GET', 'POST'])
 @admin_required

@@ -7,11 +7,10 @@ from pprint import pprint
 import logging
 
 from main import app
-from interaction_logger import StructuredEvent
 
-from flask.ext.sqlalchemy import SQLAlchemy
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from flask.ext.security import UserMixin, RoleMixin, login_required
+from flask_security import UserMixin, RoleMixin, login_required
 from sqlalchemy import event, Integer, Date, ForeignKey, Column, Table,\
                        String, Boolean, DateTime, Text, ForeignKeyConstraint,\
                        cast, func
@@ -25,7 +24,7 @@ backref = db.backref
 def ensure_dirs(path):
     try: 
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         if not os.path.isdir(path):
             app.logger.warning(e.args + (path, ) )
 
@@ -202,143 +201,6 @@ class Submission(Base):
             db.session.commit()
         return submission
         
-    @staticmethod
-    def default_explanation(code):
-        return {
-                'code': code,
-                'elements': {
-                    'CORGIS_USE': {'line': 0, 'present': False, 'answer': '', 'name': 'CORGIS_USE'},
-                    'FOR_LOOP': {'line': 0, 'present': False, 'answer': '', 'name': 'FOR_LOOP'},
-                    'DICTIONARY_ACCESS': {'line': 0, 'present': False, 'answer': '', 'name': 'DICTIONARY_ACCESS'},
-                    'IMPORT_CORGIS': {'line': 0, 'present': False, 'answer': '', 'name': 'IMPORT_CORGIS'},
-                    'LIST_APPEND': {'line': 0, 'present': False, 'answer': '', 'name': 'LIST_APPEND'},
-                    'IMPORT_MATPLOTLIB': {'line': 0, 'present': False, 'answer': '', 'name': 'IMPORT_MATPLOTLIB'},
-                    'ASSIGNMENT': {'line': 0, 'present': False, 'answer': '', 'name': 'ASSIGNMENT'},
-                    'MATPLOTLIB_PLOT': {'line': 0, 'present': False, 'answer': '', 'name': 'MATPLOTLIB_PLOT'},
-                    'LIST_ASSIGNMENT': {'line': 0, 'present': False, 'answer': '', 'name': 'LIST_ASSIGNMENT'}
-                }
-        }
-        
-    @staticmethod
-    def save_explanation_answer(user_id, assignment_id, name, answer):
-        submission = Submission.query.filter_by(user_id=user_id, 
-                                                assignment_id=assignment_id).first()
-        submission_destructured = json.loads(submission.code)
-        elements = submission_destructured['elements']
-        if name in elements:
-            elements[name]['answer'] = answer
-            submission.code = json.dumps(submission_destructured)
-            submission.version += 1
-            db.session.commit()
-            submission.log_code()
-            return submission_destructured
-        
-    
-    def save_explanation_code(self, code, elements):
-        try:
-            submission_destructured = json.loads(self.code)
-        except ValueError:
-            submission_destructured = {}
-        if 'code' in submission_destructured:
-            submission_destructured['code'] = code
-            existing_elements = submission_destructured['elements']
-            for element in existing_elements:
-                existing_elements[element]['present'] = False
-            for element, value in elements.items():
-                existing_elements[element]['line'] = value
-                existing_elements[element]['present'] = True
-        else:
-            submission_destructured = Submission.default_explanation(code)
-        self.code = json.dumps(submission_destructured)
-        self.version += 1
-        db.session.commit()
-        self.log_code()
-        return submission_destructured
-        
-    ELEMENT_PRIORITY_LIST = ['CORGIS_USE', 'FOR_LOOP', 'DICTIONARY_ACCESS', 
-                         'IMPORT_CORGIS', 'LIST_APPEND', 'IMPORT_MATPLOTLIB', 
-                         'ASSIGNMENT', 'MATPLOTLIB_PLOT']
-                         
-    @staticmethod
-    def abbreviate_element_type(element_type):
-        return ''.join([l[0] for l in element_type.split("_")])
-    
-    def load_explanation(self, max_questions):
-        submission_destructured = json.loads(self.code)
-        code = submission_destructured['code']
-        # Find the first FIVE
-        available_elements = []
-        used_lines = set()
-        e = submission_destructured['elements']
-        for element in Submission.ELEMENT_PRIORITY_LIST:
-            # Not present?
-            if not e[element]['present']:
-                continue
-            # Already used that line?
-            if e[element]['line'][0] in used_lines:
-                continue
-            # Cool, then add it
-            available_elements.append(e[element])
-            used_lines.add(e[element]['line'][0])
-            # Stop if we have enough already
-            if len(available_elements) >= max_questions:
-                break
-        return code, available_elements
-        
-    @staticmethod
-    def save_code(user_id, assignment_id, code, assignment_version):
-        submission = Submission.query.filter_by(user_id=user_id, 
-                                                assignment_id=assignment_id).first()
-        is_version_correct = True
-        if not submission:
-            submission = Submission(assignment_id=assignment_id, 
-                                    user_id=user_id,
-                                    code=code,
-                                    assignment_version=assignment_version)
-            db.session.add(submission)
-        else:
-            submission.code = code
-            submission.version += 1
-            current_assignment_version = Assignment.by_id(submission.assignment_id).version
-            is_version_correct = (assignment_version == current_assignment_version)
-        db.session.commit()
-        submission.log_code()
-        return submission, is_version_correct
-        
-    @staticmethod
-    def save_correct(user_id, assignment_id):
-        submission = Submission.query.filter_by(user_id=user_id, 
-                                                assignment_id=assignment_id).first()
-        if not submission:
-            submission = Submission(assignment_id=self.id, 
-                                    user_id=user_id,
-                                    correct=True)
-            db.session.add(submission)
-        else:
-            submission.correct = True
-        db.session.commit()
-        return submission
-        
-    def log_code(self, extension='.py'):
-        '''
-        Store the code on disk, mapped to the Assignment ID and the Student ID
-        '''
-        # Multiple-file logging
-        directory = os.path.join(app.config['BLOCKLY_LOG_DIR'],
-                                 str(self.assignment_id), 
-                                 str(self.user_id))
-
-        ensure_dirs(directory)
-        name = time.strftime("%Y%m%d-%H%M%S")
-        file_name = os.path.join(directory, name + extension)
-        with open(file_name, 'wb') as blockly_logfile:
-            blockly_logfile.write(self.code)
-        # Single file logging
-        student_interactions_logger = logging.getLogger('StudentInteractions')
-        student_interactions_logger.info(
-            StructuredEvent(self.user_id, self.assignment_id, 'code', 'set', self.code)
-        )
-
     
 class Assignment(Base):
     url = Column(String(255), default="")
@@ -356,42 +218,6 @@ class Assignment(Base):
     owner_id = Column(Integer(), ForeignKey('user.id'))
     course_id = Column(Integer(), ForeignKey('course.id'))
     version = Column(Integer(), default=0)
-    
-    @staticmethod
-    def edit(assignment_id, presentation=None, name=None, on_run=None, on_step=None, on_start=None, parsons=None, text_first=None):
-        assignment = Assignment.by_id(assignment_id)
-        if name is not None:
-            assignment.name = name
-            assignment.version += 1
-        if presentation is not None:
-            assignment.body = presentation
-            assignment.version += 1
-        if on_run is not None:
-            assignment.on_run = on_run
-            assignment.version += 1
-        if on_step is not None:
-            assignment.on_step = on_step
-            assignment.version += 1
-        if on_start is not None:
-            assignment.on_start = on_start
-            assignment.version += 1
-        assignment.type = 'normal'
-        if parsons is True:
-            assignment.type = 'parsons'
-            assignment.version += 1
-        if text_first is True:
-            assignment.type = 'text'
-            assignment.version += 1
-        db.session.commit()
-        return assignment
-    
-    def to_dict(self):
-        return {
-            'name': self.name,
-            'id': self.id,
-            'body': self.body,
-            'title': self.title()
-        }
     
     def __str__(self):
         return '<Assignment {} for {}>'.format(self.id, self.course_id)
@@ -525,25 +351,3 @@ class AssignmentGroupMembership(Base):
             membership.assignment_group_id = new_group_id
         db.session.commit()
         return membership
-
-class Log(Base):
-    event = Column(String(255), default="")
-    action = Column(String(255), default="")
-    assignment_id = Column(Integer(), ForeignKey('assignment.id'))
-    user_id = Column(Integer(), ForeignKey('user.id'))
-    
-    @staticmethod    
-    def new(event, action, assignment_id, user_id):
-        # Database logging
-        log = Log(event=event, action=action, assignment_id=assignment_id, user_id=user_id)
-        db.session.add(log)
-        db.session.commit()
-        # Single-file logging
-        student_interactions_logger = logging.getLogger('StudentInteractions')
-        student_interactions_logger.info(
-            StructuredEvent(user_id, assignment_id, event, action, '')
-        )
-        return log
-    
-    def __str__(self):
-        return '<Log {} for {}>'.format(self.event, self.action)

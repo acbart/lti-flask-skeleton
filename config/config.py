@@ -3,9 +3,14 @@ Flask Configuration File
 """
 import os
 import yaml
+from pathlib import Path
 
+FILE_PATH = Path(__file__)
+PARENT_PATH = FILE_PATH.resolve().parent
+CONFIG_DIRECTORY = str(PARENT_PATH.resolve())
+SECRET_FILE_PATH = str(PARENT_PATH / 'secrets.yaml')
 try:
-    with open('secrets.yaml', 'r') as secret_file:
+    with open(SECRET_FILE_PATH, 'r') as secret_file:
         secrets = yaml.load(secret_file)
 except IOError:
     print("No secret file found. Create your own secret file based on 'config/example-secrets.yaml'.")
@@ -22,9 +27,9 @@ class Config(object):
     SITE_NAME = 'YOUR APPLICATION NAME GOES HERE'
     # TODO: e.g., "acbart@vt.edu"
     SYS_ADMINS = ['admin@org.extension']
-    ROOT_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
-    STATIC_DIRECTORY = os.path.join(ROOT_DIRECTORY, 'static')
-    BLOCKLY_LOG_DIR = os.path.join(ROOT_DIRECTORY, 'logs')
+    ROOT_DIRECTORY = str(PARENT_PATH)
+    STATIC_DIRECTORY = str(PARENT_PATH / 'static')
+    BLOCKLY_LOG_DIR = str(PARENT_PATH / 'logs')
     
     # secret key for flask authentication
     SECRET_KEY = secrets['FLASK_SECRET_KEY']
@@ -60,6 +65,8 @@ class Config(object):
     SECURITY_PASSWORD_HASH = 'bcrypt'
     SECURITY_PASSWORD_SALT = secrets.get('SECURITY_PASSWORD_SALT')
     SECURITY_DEFAULT_REMEMBER_ME = True
+    
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     
 class ProductionConfig(Config):

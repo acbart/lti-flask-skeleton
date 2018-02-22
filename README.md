@@ -7,11 +7,9 @@ Getting Started
 
 1. Obtain a PEM certificate. You'll eventually need one for your production server, but in the meantime you'll want one for local development. This process is one of the most frustrating steps, especially if you're on Windows, but it's worth it to be able to develop locally.
 
-  1. Download and run ssh-gen
-  
-  2. If you're on windows, you'll need to install the certificate into your certificate folder.
-  
-  3. Either way, ensure that there is a PEM file in your `certs/` directory and that it is correctly referenced in your `secrets.yaml`.
+    1. Download and run ssh-keygen (installable through Git, for instance)
+    2. If you're on windows, you'll need to install the certificate into your certificate folder.
+    3. Either way, ensure that there is a PEM file in your `certs/` directory and that it is correctly referenced in your `secrets.yaml`.
   
 2. Choose your database for the local development instance and the production server. For the local development instance, I recommend using SQLite since it is lightweight and easy. For the production server, you will probably want to use MySQL or PostGres. You will not need to define the database schema yet, but you will need to make this decision. If you decide to use SQLite for your test server, carefully test your schema on the MySQL server early on, since you might find differences in their support (in particular, foreign key references and column typing).
 
